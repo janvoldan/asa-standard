@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "domain": "auth",
+  "slice": "login",
+  "inputs": {
+    "email": "string",
+    "password": "string"
+  },
+  "outputs": {
+    "jwt_token": "string",
+    "expires_in": "int"
+  },
+  "behaviour": [
+    "Verify user exists in database AND user.is_active = True.",
+    "Verify password matches stored hash (bcrypt).",
+    "Generate JWT token with 24h expiration.",
+    "Return token (never return password hash)."
+  ],
+  "errors": [
+    { "code": "INVALID_CREDENTIALS", "message": "Invalid email or password." },
+    { "code": "USER_NOT_FOUND", "message": "No user with this email exists." },
+    { "code": "ACCOUNT_LOCKED", "message": "Account has been locked due to too many failed attempts." }
+  ],
+  "side_effects": [
+    "Updates last_login timestamp in database."
+  ],
+  "dependencies": []
+}
