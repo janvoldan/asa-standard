@@ -32,12 +32,12 @@ ASA enforces boundaries through static analysis of the import graph using Abstra
 ```bash
 $ asa lint auth/login
 
-❌ [LINT FAIL] Boundary violation in repository.py:
-   Line 3: Illegal import 'domains.billing.create_invoice'
+❌ [LINT FAIL] Boundary violation in repository.ts:
+   Line 3: Illegal import '@/domains/billing/subscribe/handler'
    -> Cannot import from other domains.
 ```
 
-The linter checks every `.ts`, `.tsx`, and `.py` file in the Slice and verifies that:
+The linter checks every `.ts` and `.tsx` file in the Slice and verifies that:
 
 - No imports reference other domains
 - Only `shared/` modules are used for cross-cutting concerns

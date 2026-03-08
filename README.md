@@ -161,9 +161,7 @@ The ASA CLI automates and enforces the standard:
 | `asa lint` | Enforce boundaries, contracts, security rules |
 | `asa deploy` | Architecture-safe deployment (Vercel + Supabase) |
 
-The CLI is available at [vibecodiq.com](https://vibecodiq.com).
-
-ASA the standard is open and language-agnostic. The reference implementation targets **Next.js + Supabase + Stripe on Vercel**.
+ASA the standard is open and language-agnostic. The reference CLI implementation targets **Next.js + Supabase + Stripe on Vercel**.
 
 ---
 
