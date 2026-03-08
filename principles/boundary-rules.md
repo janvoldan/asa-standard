@@ -37,11 +37,13 @@ $ asa lint auth/login
    -> Cannot import from other domains.
 ```
 
-The linter checks every `.py` file in the Slice and verifies that:
+The linter checks every `.ts`, `.tsx`, and `.py` file in the Slice and verifies that:
 
 - No imports reference other domains
 - Only `shared/` modules are used for cross-cutting concerns
 - No reverse dependencies exist (legacy importing from ASA domains)
+- No `service_role` / admin client usage in browser-capable code
+- No overly permissive RLS policies (`USING (true)`, `WITH CHECK (true)`)
 
 ---
 
@@ -49,10 +51,12 @@ The linter checks every `.py` file in the Slice and verifies that:
 
 | Check | Description |
 |-------|-------------|
-| **Cross-domain imports** | Detects imports from `domains.X` in a Slice belonging to domain `Y` |
-| **Required files** | Verifies all standard Slice files exist |
+| **Cross-domain imports** | Detects imports from `domains/X` in a Slice belonging to domain `Y` |
+| **Required files** | Verifies all standard Slice files exist (based on slice type) |
 | **Contract validity** | Checks `slice.contract.json` is valid and matches the spec |
-| **Marker integrity** | Verifies `BEGIN USER CODE` / `END USER CODE` markers are present |
+| **Marker integrity** | Verifies `ASA GENERATED` / `USER CODE` markers are present |
+| **Security** | Detects admin client / service_role key in browser-capable files |
+| **RLS** | Detects overly permissive RLS policies in SQL migrations |
 
 ---
 
@@ -62,37 +66,37 @@ The linter checks every `.py` file in the Slice and verifies that:
 
 A Slice's files may import from each other freely:
 
-```python
-# domains/auth/login/handler.py
-from .service import LoginService        # ✅ Same slice
-from .schemas import LoginRequest        # ✅ Same slice
+```typescript
+// domains/auth/login/handler.ts
+import { LoginRequestSchema } from './schemas';    // ✅ Same slice
+import { loginQuery } from './repository';         // ✅ Same slice
 ```
 
 ### Within a Domain
 
 Slices in the same domain may reference each other:
 
-```python
-# domains/auth/login/service.py
-from domains.auth.register.schemas import UserDTO  # ✅ Same domain
+```typescript
+// domains/auth/login/handler.ts
+import type { Profile } from '@/domains/auth/register/schemas';  // ✅ Same domain
 ```
 
 ### From Shared
 
 Any Slice may import from `/shared`:
 
-```python
-# domains/billing/create_invoice/service.py
-from shared.database import get_session           # ✅ Shared infrastructure
-from shared.adapters.email import send_email      # ✅ Shared adapter
+```typescript
+// domains/billing/subscribe/handler.ts
+import { createServerClient } from '@/shared/db/supabase-client';  // ✅ Shared infra
+import { stripe } from '@/shared/billing/stripe-client';           // ✅ Shared adapter
 ```
 
 ### Forbidden
 
-```python
-# domains/auth/login/repository.py
-from domains.billing.create_invoice import InvoiceService  # ❌ Cross-domain
-from legacy.src.billing import calculate_total             # ❌ Direct legacy import
+```typescript
+// domains/auth/login/handler.ts
+import { subscribe } from '@/domains/billing/subscribe/handler';   // ❌ Cross-domain
+import { createAdminClient } from '@/shared/db/supabase-client';   // ❌ Admin client in route handler
 ```
 
 ---
@@ -101,12 +105,12 @@ from legacy.src.billing import calculate_total             # ❌ Direct legacy i
 
 In migration scenarios (Cap, Bridge & Grow), ASA Slices access legacy data through bridge adapters in `/shared/legacy_bridge`:
 
-```python
-# ✅ Correct — via bridge adapter
-from shared.legacy_bridge.billing import BillingAdapter
+```typescript
+// ✅ Correct — via bridge adapter
+import { BillingAdapter } from '@/shared/legacy-bridge/billing';
 
-# ❌ Forbidden — direct legacy import
-from legacy.src.billing import calculate_total
+// ❌ Forbidden — direct legacy import
+import { calculateTotal } from '@/legacy/src/billing';
 ```
 
 The bridge adapter is a thin translation layer — no business logic. If logic appears in the bridge, the migration has failed.

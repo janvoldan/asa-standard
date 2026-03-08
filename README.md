@@ -1,6 +1,6 @@
 # ASA — Atomic Slice Architecture
 
-**A backend-first architecture standard for AI-generated software that stays maintainable.**
+**An architecture standard for AI-generated software that stays maintainable.**
 
 ---
 
@@ -54,13 +54,13 @@ ASA is built on four pillars:
 ## How It Works
 
 ```
-slice.spec.md  →  slice.contract.json  →  Python skeleton  →  Your implementation
-   (human)            (machine)             (generated)          (preserved)
+slice.spec.md  →  slice.contract.json  →  TypeScript skeleton  →  Your implementation
+   (human)            (machine)              (generated)            (preserved)
 ```
 
 1. **Spec** — Human-readable intent document (Markdown)
-2. **Contract** — Machine-readable representation (JSON)
-3. **Skeleton** — Generated code with marker regions (Python/TypeScript)
+2. **Contract** — Machine-readable representation (JSON, with typed fields)
+3. **Skeleton** — Generated code with marker regions (TypeScript)
 4. **Implementation** — Your business logic inside markers (safe during regeneration)
 
 → [Contract-driven pipeline](principles/contract-driven.md)
@@ -69,31 +69,21 @@ slice.spec.md  →  slice.contract.json  →  Python skeleton  →  Your impleme
 
 ## Slice Architecture
 
-A Slice is the smallest complete business operation. Everything for one feature lives in one folder:
+A Slice is a **vertical feature unit** — backend handler, database access, validation schemas, and UI component all in one folder:
 
 ```
 domains/auth/login/
 ├── slice.spec.md         # What it does (human-readable)
 ├── slice.contract.json   # What it does (machine-readable)
-├── handler.py            # FastAPI endpoint
-├── service.py            # Business logic
-├── repository.py         # Data access
-├── schemas.py            # Pydantic models
-└── tests/
-    └── test_slice.py
+├── handler.ts            # Next.js route handler
+├── repository.ts         # Database access (Supabase)
+├── schemas.ts            # Zod validation schemas
+└── ui/
+    ├── hook.ts             # React data fetching hook
+    └── AuthLoginForm.tsx   # React component
 ```
 
-Frontend Slices share the same contract, ensuring type safety across the stack:
-
-> **Note:** Frontend support is currently in beta. Backend enforcement is the stable, validated core of ASA.
-
-```
-domains/auth/ui/Login/
-├── schema.ts             # Zod validation (from contract)
-├── hook.ts               # Data fetching
-├── api.ts                # API client
-└── Login.tsx             # React component
-```
+Backend and frontend share the same contract, ensuring type safety across the stack.
 
 → [Slice architecture details](principles/slice-architecture.md)
 
@@ -129,11 +119,25 @@ ASA was designed in response to five root causes observed in AI-generated and AI
 
 ---
 
+## Foundation Modules
+
+ASA defines three foundation modules that cover the most common SaaS needs:
+
+| Module | Built On | What It Adds |
+|--------|----------|-------------|
+| **auth** | Supabase Auth | Slice structure, middleware, profile sync, route guards, RLS policies, security-reviewed defaults |
+| **db** | Supabase PostgreSQL | Canonical client separation (browser/server/admin), repository boundaries, migration conventions |
+| **payments** | Stripe | Idempotent webhook handler, subscription state machine, plan limits, entitlement checks |
+
+Foundation modules are not wrappers — they add **architecture, safe defaults, and enforcement** on top of vendor primitives.
+
+---
+
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Slice Architecture](principles/slice-architecture.md) | How Slices work — backend (stable) and frontend (beta) |
+| [Slice Architecture](principles/slice-architecture.md) | How Slices work — full-stack vertical features |
 | [Boundary Rules](principles/boundary-rules.md) | Import rules, enforcement, allowed dependencies |
 | [Contract-Driven Pipeline](principles/contract-driven.md) | Spec → Contract → Skeleton pipeline |
 | [Regeneration Safety](principles/regeneration-safety.md) | Marker-based code preservation |
@@ -145,9 +149,21 @@ ASA was designed in response to five root causes observed in AI-generated and AI
 
 ## Tooling
 
-A commercial CLI tool that enforces and automates ASA rules is available separately. Contact [vibecodiq.com](https://vibecodiq.com) for details.
+The ASA CLI automates and enforces the standard:
 
-ASA the standard is language-agnostic. It can be implemented for any language and framework.
+| Command | Purpose |
+|---------|--------|
+| `asa init` | Initialize a new ASA project (runnable Next.js starter) |
+| `asa scan` | Diagnose structural risk — AI Chaos Index (ACI) score |
+| `asa install <module>` | Install a foundation module (auth, db, payments) |
+| `asa slice new <name>` | Create a new vertical slice (handler + schemas + UI + contract) |
+| `asa slice update <name>` | Regenerate slice after spec change (preserves user code) |
+| `asa lint` | Enforce boundaries, contracts, security rules |
+| `asa deploy` | Architecture-safe deployment (Vercel + Supabase) |
+
+The CLI is available at [vibecodiq.com](https://vibecodiq.com).
+
+ASA the standard is open and language-agnostic. The reference implementation targets **Next.js + Supabase + Stripe on Vercel**.
 
 ---
 
@@ -159,4 +175,4 @@ The standard is open. No vendor lock-in. No license fees.
 
 ---
 
-**Version 1.0** — February 2026
+**Version 2.0** — March 2026

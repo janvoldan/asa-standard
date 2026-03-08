@@ -9,8 +9,8 @@
 ASA follows a strict pipeline where every step is deterministic:
 
 ```
-slice.spec.md  →  slice.contract.json  →  Code skeleton  →  Implementation
-   (human)            (machine)            (generated)       (preserved)
+slice.spec.md  →  slice.contract.json  →  TypeScript skeleton  →  Implementation
+   (human)            (machine)              (generated)            (preserved)
 ```
 
 The Spec is the source of truth. The Contract is the derived artifact. The Skeleton is generated from the Contract. Your implementation lives inside marker regions and survives regeneration.
@@ -69,27 +69,30 @@ The parser depends on this structure. Missing or misordered sections cause expli
 
 The Contract is the machine-readable representation of the Spec. It is:
 
-- **Generated** by `asa generate-contract`
-- **Consumed** by `asa generate-skeleton` and `asa lint`
+- **Generated** by `asa slice new` or `asa slice update`
+- **Consumed** by the skeleton generator and `asa lint`
 - **Never edited manually**
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "domain": "auth",
   "slice": "login",
-  "inputs": {
-    "email": "string",
-    "password": "string"
-  },
-  "outputs": {
-    "jwt_token": "string",
-    "expires_in": "int"
-  },
+  "type": "route",
+  "has_ui": true,
+  "has_repository": true,
+  "inputs": [
+    { "name": "email", "type": "string", "required": true },
+    { "name": "password", "type": "string", "required": true }
+  ],
+  "outputs": [
+    { "name": "token", "type": "string", "required": true },
+    { "name": "expiresIn", "type": "int", "required": true }
+  ],
   "behaviour": [
     "Verify user exists in database.",
     "Verify password matches stored hash.",
-    "Generate JWT token with user ID claim.",
+    "Generate session token.",
     "Return token with expiration time."
   ],
   "errors": [
@@ -109,74 +112,65 @@ The same Spec always produces the same Contract. This is the determinism guarant
 
 Generated code files follow a fixed structure with marker regions:
 
-### `schemas.py` — Pydantic Models
+### `schemas.ts` — Zod Validation (fully generated)
 
-```python
-from pydantic import BaseModel
+```typescript
+import { z } from 'zod';
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+export const LoginRequestSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
 
-class LoginResponse(BaseModel):
-    jwt_token: str
-    expires_in: int
+export const LoginResponseSchema = z.object({
+  token: z.string(),
+  expiresIn: z.number().int(),
+});
+
+export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 ```
 
-### `handler.py` — FastAPI Endpoint
+### `handler.ts` — Next.js Route Handler (with markers)
 
-```python
-from fastapi import APIRouter
-from .service import LoginService
-from .schemas import LoginRequest, LoginResponse
+```typescript
+// --- ASA GENERATED START ---
+import { NextRequest, NextResponse } from 'next/server';
+import { LoginRequestSchema, type LoginRequest, type LoginResponse } from './schemas';
+// --- ASA GENERATED END ---
 
-router = APIRouter()
-
-# === BEGIN USER CODE ===
-@router.post("")
-def handle_login(request: LoginRequest) -> LoginResponse:
-    service = LoginService()
-    return service.execute(request)
-# === END USER CODE ===
-```
-
-### `service.py` — Business Logic
-
-```python
-from .repository import LoginRepository
-from .schemas import LoginRequest, LoginResponse
-
-class LoginService:
-    def __init__(self) -> None:
-        self.repo = LoginRepository()
-
-    # === BEGIN USER CODE ===
-    def execute(self, request: LoginRequest) -> LoginResponse:
-        # TODO: implement using repo
-        raise NotImplementedError()
-    # === END USER CODE ===
+// --- USER CODE START ---
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const input = LoginRequestSchema.parse(body);
+  // TODO: implement auth/login logic
+  return NextResponse.json({ token: '', expiresIn: 3600 });
+}
+// --- USER CODE END ---
 ```
 
 ---
 
 ## Step 4: Implementation
 
-You write business logic **inside the marker regions**:
+You write business logic **inside the USER CODE marker regions**:
 
-```python
-    # === BEGIN USER CODE ===
-    def execute(self, request: LoginRequest) -> LoginResponse:
-        user = self.repo.get_user_by_email(request.email)
-        if not user:
-            raise UserNotFoundError()
-        if not verify_password(request.password, user.password_hash):
-            raise InvalidCredentialsError()
-        token = generate_jwt(user.id)
-        return LoginResponse(jwt_token=token, expires_in=3600)
-    # === END USER CODE ===
+```typescript
+// --- USER CODE START ---
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const input = LoginRequestSchema.parse(body);
+  const user = await getUserByEmail(input.email);
+  if (!user || !verifyPassword(input.password, user.passwordHash)) {
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  }
+  const token = await generateSession(user.id);
+  return NextResponse.json({ token, expiresIn: 3600 });
+}
+// --- USER CODE END ---
 ```
 
-When the Spec changes, you regenerate. Your code inside markers is preserved. Structure outside markers is updated from the new Contract.
+When the Spec changes, you run `asa slice update`. Your code inside markers is preserved. Structure outside markers (imports, schemas) is updated from the new Contract.
 
 See [Regeneration Safety](regeneration-safety.md) for details.
 
@@ -186,32 +180,33 @@ See [Regeneration Safety](regeneration-safety.md) for details.
 
 Types flow consistently from Spec through Contract to code:
 
-| Spec Type | Contract Type | Python (Pydantic) | TypeScript (Zod) |
-|-----------|---------------|-------------------|------------------|
-| `string` | `"string"` | `str` | `z.string()` |
-| `int` | `"int"` | `int` | `z.number()` |
-| `float` | `"float"` | `float` | `z.number()` |
-| `boolean` | `"boolean"` | `bool` | `z.boolean()` |
-| `datetime` | `"datetime"` | `datetime` | `z.string().datetime()` |
-| `list<string>` | `"list<string>"` | `List[str]` | `z.array(z.string())` |
-| `optional<string>` | `"optional<string>"` | `Optional[str]` | `z.string().optional()` |
+| Spec Type | Contract Type | TypeScript (Zod) |
+|-----------|---------------|------------------|
+| `string` | `"string"` | `z.string()` |
+| `int` | `"int"` | `z.number().int()` |
+| `float` | `"float"` | `z.number()` |
+| `boolean` | `"boolean"` | `z.boolean()` |
+| `datetime` | `"datetime"` | `z.string().datetime()` |
+| `date` | `"date"` | `z.string().date()` |
+| `list<string>` | `"list<string>"` | `z.array(z.string())` |
+| `optional<string>` | `"optional<string>"` | `z.string().optional()` |
 
 ---
 
-## Full-Stack Contract Sharing (Frontend: Beta)
+## Full-Stack Contract Sharing
 
-> **Note:** Frontend code generation from contracts is currently in beta. Backend contract generation and enforcement is stable.
-
-The same Contract generates both backend and frontend code:
+The same Contract generates both handler and UI code:
 
 ```
 slice.contract.json
         │
-        ├─→  schemas.py    (Pydantic — backend validation, stable)
-        └─→  schema.ts     (Zod — frontend validation, beta)
+        ├─→  schemas.ts      (Zod validation — used by handler and UI)
+        ├─→  handler.ts      (route handler imports schemas)
+        ├─→  repository.ts   (data access imports schemas)
+        └─→  ui/hook.ts      (React hook imports schemas)
 ```
 
-Backend defines the contract. Frontend consumes it. Both are generated from the same source. The goal is to make type mismatches between frontend and backend structurally impossible.
+The contract is the single source of truth. Type mismatches between handler and UI are structurally impossible.
 
 ---
 
@@ -219,12 +214,11 @@ Backend defines the contract. Frontend consumes it. Both are generated from the 
 
 ```
 1. Write or update slice.spec.md
-2. asa generate-contract <domain>/<slice>
-3. asa generate-skeleton <domain>/<slice>     (first time)
-   asa regenerate-slice <domain>/<slice>      (subsequent times)
-4. Implement business logic inside markers
-5. asa lint <domain>/<slice>
-6. Run tests
+2. asa slice new <domain>/<slice>               (first time — creates contract + skeleton + UI)
+   asa slice update <domain>/<slice>            (subsequent — regenerates, preserves user code)
+3. Implement business logic inside USER CODE markers
+4. asa lint <domain>/<slice>
+5. Run tests
 ```
 
 When requirements change, update the Spec first. Then regenerate. The pipeline ensures consistency between intent, contract, and implementation.
