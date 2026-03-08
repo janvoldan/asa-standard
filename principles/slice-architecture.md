@@ -19,20 +19,20 @@ A Slice has exactly one business intent, one input contract, and one output cont
 
 ---
 
-## Backend Slice Structure
+## Slice Structure
 
-Every backend Slice follows a deterministic file structure:
+Every Slice follows a deterministic file structure:
 
 ```
 domains/<domain>/<slice>/
 ├── slice.spec.md         # Human-readable specification
 ├── slice.contract.json   # Machine-readable contract (generated)
-├── handler.py            # HTTP endpoint (FastAPI router)
-├── service.py            # Business logic
-├── repository.py         # Data access
-├── schemas.py            # Request/response models (Pydantic)
-└── tests/
-    └── test_slice.py     # Slice tests
+├── handler.ts            # Route handler (Next.js route handler / server action)
+├── repository.ts         # Data access (Supabase queries)
+├── schemas.ts            # Zod validation schemas (generated from contract)
+└── ui/
+    ├── hook.ts             # React data fetching hook
+    └── <Component>.tsx     # React component
 ```
 
 ### File Responsibilities
@@ -41,11 +41,21 @@ domains/<domain>/<slice>/
 |------|---------|----------|
 | `slice.spec.md` | Intent document | Purpose, inputs, outputs, behaviour, errors, side effects, dependencies |
 | `slice.contract.json` | Machine interface | Structured representation of the spec (never edited manually) |
-| `handler.py` | HTTP layer | FastAPI router, request/response handling |
-| `service.py` | Business logic | Core implementation between marker regions |
-| `repository.py` | Data access | Database queries, external data retrieval |
-| `schemas.py` | Data models | Pydantic models for validation |
-| `tests/` | Verification | Unit tests for the Slice |
+| `handler.ts` | HTTP layer | Next.js route handler, request/response handling |
+| `repository.ts` | Data access | Database queries (Supabase) |
+| `schemas.ts` | Validation | Zod schemas (fully generated from contract) |
+| `ui/hook.ts` | Data fetching | React hook for API calls |
+| `ui/<Component>.tsx` | UI | React component |
+
+### Slice Types
+
+ASA supports three Slice types, each generating different files:
+
+| Type | Handler | UI | Repository | Example |
+|------|---------|----|-----------|---------|
+| **Route** | `handler.ts` (HTTP endpoint) | ✅ (default on) | ✅ (default on) | `auth/login`, `billing/subscribe` |
+| **Webhook** | `handler.ts` (webhook receiver) | ❌ (always off) | ✅ (default on) | `billing/webhook` |
+| **Internal service** | `service.ts` (no HTTP route) | ❌ (always off) | ✅ (default on) | `billing/check-limits` |
 
 ### Example
 
@@ -56,52 +66,39 @@ domains/
 │   ├── register/        # "User creates a new account"
 │   └── logout/          # "User session is terminated"
 └── billing/
-    ├── create_invoice/  # "Create invoice from order data"
-    └── calculate_total/ # "Calculate order total with discounts"
+    ├── subscribe/       # "User subscribes to Pro plan" (route)
+    ├── webhook/         # "Handle Stripe webhook events" (webhook)
+    └── check-limits/    # "Check plan limits for user" (internal service)
 ```
 
-Each Slice is self-contained. `auth/login` does not import from `billing/create_invoice`.
+Each Slice is self-contained. `auth/login` does not import from `billing/subscribe`.
+
+### Runtime Adapters
+
+Slices live in `domains/` but Next.js routes live in `app/`. ASA generates thin **runtime adapters** that wire slices to the Next.js runtime:
+
+```typescript
+// app/api/auth/login/route.ts — auto-generated, read-only
+export { POST } from '@/domains/auth/login/handler';
+```
+
+Runtime adapters are strictly read-only. Business logic belongs in `domains/`, not in `app/`.
 
 ---
 
-## Frontend Slice Structure (Beta)
+## Contract Alignment
 
-> **Note:** Frontend support is currently in beta. The structure and conventions described below are implemented but have not yet been validated on production projects. Backend enforcement is the stable, validated core of ASA.
-
-Frontend Slices share the same contract as their backend counterpart, ensuring type safety across the stack:
+Each Slice has one contract that generates both handler types (Zod schemas) and UI hooks:
 
 ```
-domains/<domain>/ui/<SliceName>/
-├── slice.ui.spec.md     # UI behaviour specification
-├── schema.ts            # Zod validation schemas (from contract)
-├── hook.ts              # Data fetching hook (SWR)
-├── api.ts               # API client
-├── <SliceName>.tsx      # React component
-└── <SliceName>.test.tsx # Component tests
+slice.contract.json
+        │
+        ├─→  schemas.ts     (Zod validation — used by handler and UI)
+        ├─→  handler.ts     (route handler imports schemas)
+        └─→  ui/hook.ts     (React hook imports schemas)
 ```
 
-### Contract Alignment
-
-Backend and frontend share the same `slice.contract.json`:
-
-| Backend (Pydantic) | Frontend (Zod) | Source |
-|--------------------|----------------|--------|
-| `LoginRequest` | `LoginRequestSchema` | Same contract |
-| `LoginResponse` | `LoginResponseSchema` | Same contract |
-
-The frontend hook validates API responses against the Zod schema at runtime:
-
-```typescript
-const validated = LoginResponseSchema.safeParse(data);
-if (!validated.success) {
-  console.error('Contract violation: backend sent invalid data', {
-    issues: validated.error.issues,
-    received: data,
-  });
-}
-```
-
-Contract violations are explicit, not silent. The system reports exactly what is wrong.
+The contract is the single source of truth. Type mismatches between handler and UI are structurally impossible.
 
 ---
 
@@ -157,27 +154,34 @@ Infrastructure that is not business logic lives in `/shared`:
 
 ```
 shared/
-├── database.py        # DB session management
-├── config.py          # Configuration loading
-└── adapters/
-    ├── email.py       # Email service adapter
-    └── payment.py     # Payment gateway adapter
+├── db/
+│   ├── supabase-client.ts   # Canonical DB client (browser/server/admin)
+│   ├── types.ts             # Database types
+│   └── migrations/          # SQL migration files
+├── auth/
+│   ├── middleware.ts         # Session check, route protection
+│   ├── session.ts           # Server-side session helpers
+│   └── hooks.ts             # useUser(), useSession()
+└── billing/
+    ├── stripe-client.ts     # Stripe client config
+    ├── plans.ts             # Plan definitions and limits
+    └── hooks.ts             # useSubscription()
 ```
 
 ### What Belongs in `/shared`
 
 | Allowed | Example |
-|---------|---------|
-| Database session | `shared/database.py` |
-| External service adapters | `shared/adapters/email.py` |
-| Configuration | `shared/config.py` |
-| Logging setup | `shared/logging.py` |
+|---------|--------|
+| Database client | `shared/db/supabase-client.ts` |
+| Auth middleware | `shared/auth/middleware.ts` |
+| External service config | `shared/billing/stripe-client.ts` |
+| Cross-domain hooks | `shared/auth/hooks.ts` |
 
 ### What Does NOT Belong in `/shared`
 
 | Forbidden | Reason |
 |-----------|--------|
-| Business logic | Belongs in Slice services |
+| Business logic | Belongs in Slice handlers/services |
 | Validators with business rules | Duplicated per Slice |
 | Domain-specific calculations | Slice-specific |
 
@@ -189,15 +193,17 @@ shared/
 
 If two Slices need similar validation logic, duplicate it. Do not extract it to `/shared`.
 
-```python
-# Each slice has its own copy
-# domains/auth/register/service.py
-def _validate_password(password: str) -> bool:
-    return len(password) >= 8 and any(c.isupper() for c in password)
+```typescript
+// Each slice has its own copy
+// domains/auth/register/handler.ts
+function validatePassword(password: string): boolean {
+  return password.length >= 8 && /[A-Z]/.test(password);
+}
 
-# domains/auth/reset_password/service.py
-def _validate_password(password: str) -> bool:
-    return len(password) >= 8 and any(c.isupper() for c in password)
+// domains/auth/reset-password/handler.ts
+function validatePassword(password: string): boolean {
+  return password.length >= 8 && /[A-Z]/.test(password);
+}
 ```
 
 Why: shared helpers create coupling. Coupling creates drift. Drift breaks deterministic regeneration.
@@ -208,15 +214,18 @@ In ASA, coupling is expensive. Duplication is free.
 
 ## Orchestration
 
-Slice services do not orchestrate other Slices. Multi-slice workflows live outside Slices:
+Slice handlers do not orchestrate other Slices. Multi-slice workflows use internal service slices or server actions:
 
-```python
-# flows/register_user_flow.py
-async def register_user_flow(data):
-    user = await user_register_service.execute(data)
-    await email_send_welcome_service.execute({"email": user.email})
-    await analytics_track_service.execute({"event": "user_registered", "user_id": user.id})
-    return user
+```typescript
+// Server action or API route that orchestrates multiple slices
+import { registerUser } from '@/domains/auth/register/handler';
+import { sendWelcomeEmail } from '@/domains/notifications/welcome/service';
+
+export async function registerAndWelcome(data: RegisterInput) {
+  const user = await registerUser(data);
+  await sendWelcomeEmail({ email: user.email });
+  return user;
+}
 ```
 
 This keeps each Slice independent and testable in isolation.

@@ -19,21 +19,25 @@ This compounds over time. Teams stop regenerating because they fear losing work.
 
 ASA uses explicit markers to define protected regions in generated code:
 
-```python
-class LoginService:
-    def __init__(self) -> None:
-        self.repo = LoginRepository()
+```typescript
+// --- ASA GENERATED START ---
+// Auto-generated. Do NOT edit this section.
+import { NextRequest, NextResponse } from 'next/server';
+import { LoginRequestSchema, type LoginRequest } from './schemas';
+// --- ASA GENERATED END ---
 
-    # === BEGIN USER CODE ===
-    def execute(self, request: LoginRequest) -> LoginResponse:
-        user = self.repo.get_user_by_email(request.email)
-        if not user:
-            raise UserNotFoundError()
-        if not verify_password(request.password, user.password_hash):
-            raise InvalidCredentialsError()
-        token = generate_jwt(user.id)
-        return LoginResponse(jwt_token=token, expires_in=3600)
-    # === END USER CODE ===
+// --- USER CODE START ---
+// Your custom logic below. Preserved during regeneration.
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const input = LoginRequestSchema.parse(body);
+  const user = await getUserByEmail(input.email);
+  if (!user || !verifyPassword(input.password, user.passwordHash)) {
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  }
+  return NextResponse.json({ token: generateJwt(user.id) });
+}
+// --- USER CODE END ---
 ```
 
 ---
@@ -45,7 +49,7 @@ class LoginService:
 | Outside markers | **Regenerated** from template and contract |
 | Inside markers | **Preserved** exactly as written |
 
-When you run `asa regenerate-slice auth/login`:
+When you run `asa slice update auth/login`:
 
 1. The generator reads the current Contract
 2. It regenerates all structural code (imports, class definitions, type hints)
@@ -58,9 +62,9 @@ When you run `asa regenerate-slice auth/login`:
 
 | Scenario | Action |
 |----------|--------|
-| Spec changed (new inputs/outputs) | `asa generate-contract` then `asa regenerate-slice` |
-| Schema needs updating | `asa regenerate-slice` (schemas regenerated, service code preserved) |
-| Template improved | `asa regenerate-slice` (structural updates applied) |
+| Spec changed (new inputs/outputs) | `asa slice update` (regenerates contract + skeleton) |
+| Schema needs updating | `asa slice update` (schemas regenerated, handler code preserved) |
+| Template improved | `asa slice update` (structural updates applied) |
 | Bug in your logic | Edit directly inside markers, no regeneration needed |
 
 ---
@@ -70,17 +74,17 @@ When you run `asa regenerate-slice auth/login`:
 ### Updated (outside markers)
 
 - Import statements
-- Class definitions and `__init__` methods
-- Pydantic model definitions (`schemas.py`)
-- Router setup (`handler.py`)
-- Test scaffolding
+- Type definitions and schema interfaces
+- Zod validation schemas (`schemas.ts` — fully regenerated)
+- Hook type signatures
+- Runtime adapters (`app/api/.../route.ts`)
 
 ### Preserved (inside markers)
 
-- Your `execute()` method implementation
-- Your custom helper methods within marker regions
-- Your endpoint customizations
-- Any code between `BEGIN USER CODE` and `END USER CODE`
+- Your handler implementation (route logic, business rules)
+- Your custom helper functions within marker regions
+- Your React component JSX and styling
+- Any code between `// --- USER CODE START ---` and `// --- USER CODE END ---`
 
 ---
 
@@ -88,22 +92,24 @@ When you run `asa regenerate-slice auth/login`:
 
 Before (spec has `email` and `password`):
 
-```python
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+```typescript
+export const LoginRequestSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
 ```
 
 After adding `remember_me: boolean` to the spec and regenerating:
 
-```python
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-    remember_me: bool    # Added by regeneration
+```typescript
+export const LoginRequestSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+  rememberMe: z.boolean().optional(),  // Added by regeneration
+});
 ```
 
-Your `service.py` implementation inside markers remains untouched. You then update your logic to use the new field.
+Your `handler.ts` implementation inside markers remains untouched. You then update your logic to use the new field.
 
 ---
 
@@ -118,19 +124,26 @@ Your `service.py` implementation inside markers remains untouched. You then upda
 
 ## Marker Format
 
-The marker syntax is fixed:
+ASA uses two marker pairs:
 
-```
-# === BEGIN USER CODE ===
-(your implementation here)
-# === END USER CODE ===
+```typescript
+// --- ASA GENERATED START ---
+// Auto-generated code. Do NOT edit. Overwritten by `asa slice update`.
+// --- ASA GENERATED END ---
+
+// --- USER CODE START ---
+// Your custom logic. This section is preserved during regeneration.
+// --- USER CODE END ---
 ```
 
 Rules:
 - Markers must appear as exact strings
-- One marker pair per protected region
+- Generated regions are fully overwritten during regeneration
+- User code regions are preserved verbatim
 - Nesting is not allowed
-- Markers are present in `handler.py`, `service.py`, and `repository.py`
+- If markers are missing or damaged, regeneration creates a backup and skips the file
+- Markers are present in `handler.ts`, `service.ts`, `repository.ts`, `ui/hook.ts`, and `ui/<Component>.tsx`
+- `schemas.ts` is always fully regenerated (no markers needed)
 
 ---
 
@@ -140,10 +153,9 @@ Regeneration is one step in the deterministic pipeline:
 
 ```
 1. Update slice.spec.md           (human edits intent)
-2. asa generate-contract           (new contract from spec)
-3. asa regenerate-slice            (structure updated, code preserved)
-4. Update implementation           (adapt to new inputs/outputs)
-5. asa lint                        (verify boundaries and structure)
+2. asa slice update <domain/name>  (contract + skeleton regenerated, user code preserved)
+3. Update implementation           (adapt to new inputs/outputs)
+4. asa lint                        (verify boundaries and structure)
 ```
 
 The pipeline ensures that Spec, Contract, and Code remain in sync. Regeneration is safe because it is predictable and bounded.

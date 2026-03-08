@@ -27,36 +27,22 @@ These refer to earlier iterations of the same core concept and are kept for hist
 
 ## File Naming
 
-### Slice Files (Backend)
+### Slice Files
 
-All files use `snake_case`:
+File names within a Slice are fixed. There is no decision to make:
 
 | File | Convention | Example |
-|------|-----------|---------|
+|------|-----------|--------|
 | Spec | `slice.spec.md` | Always this exact name |
 | Contract | `slice.contract.json` | Always this exact name |
-| Handler | `handler.py` | Always this exact name |
-| Service | `service.py` | Always this exact name |
-| Repository | `repository.py` | Always this exact name |
-| Schemas | `schemas.py` | Always this exact name |
-| Tests | `test_slice.py` | Always this exact name |
+| Handler | `handler.ts` | Route handler (for route/webhook slices) |
+| Service | `service.ts` | Internal service (for internal-service slices) |
+| Repository | `repository.ts` | Database access |
+| Schemas | `schemas.ts` | Zod validation (fully generated from contract) |
+| Hook | `ui/hook.ts` | React data fetching hook |
+| Component | `ui/<DomainSlice>Form.tsx` | `ui/AuthLoginForm.tsx` |
 
-File names within a Slice are fixed. There is no decision to make. This eliminates structural entropy.
-
-### Slice Files (Frontend) — Beta
-
-> Frontend naming conventions are implemented but not yet validated on production projects.
-
-| File | Convention | Example |
-|------|-----------|---------|
-| UI Spec | `slice.ui.spec.md` | Always this exact name |
-| Schema | `schema.ts` | Always this exact name |
-| Hook | `hook.ts` | Always this exact name |
-| API client | `api.ts` | Always this exact name |
-| Component | `<SliceName>.tsx` | `Login.tsx`, `InvoiceList.tsx` |
-| Test | `<SliceName>.test.tsx` | `Login.test.tsx` |
-
-Component and test files use `PascalCase` matching the Slice name.
+This eliminates structural entropy.
 
 ---
 
@@ -74,54 +60,60 @@ domains/
 └── notifications/
 ```
 
-### Backend Slices
+### Slices
 
-Slice directories use `snake_case`:
+Slice directories use `kebab-case`:
 
 ```
 domains/auth/
 ├── login/
 ├── register/
-├── reset_password/
+├── reset-password/
 └── logout/
 ```
 
-### Frontend UI Slices (Beta)
-
-UI slice directories use `PascalCase`:
+UI files live inside the slice (not a separate `ui/` domain directory):
 
 ```
-domains/auth/ui/
-├── Login/
-├── Register/
-├── ResetPassword/
-└── Logout/
+domains/auth/login/
+├── handler.ts
+├── schemas.ts
+└── ui/
+    ├── hook.ts
+    └── AuthLoginForm.tsx
 ```
 
 ---
 
 ## Code Naming
 
-### Python (Backend)
+### TypeScript
 
 | Element | Convention | Example |
-|---------|-----------|---------|
-| Classes | `PascalCase` | `LoginService`, `LoginRequest` |
-| Functions | `snake_case` | `execute`, `get_user_by_email` |
-| Variables | `snake_case` | `jwt_token`, `expires_in` |
+|---------|-----------|--------|
+| Components | `PascalCase` | `AuthLoginForm`, `BillingSubscribeForm` |
+| Hooks | `camelCase` with `use` prefix | `useAuthLogin`, `useBillingSubscribe` |
+| Schemas | `PascalCase` with `Schema` suffix | `LoginRequestSchema` |
+| Functions | `camelCase` | `handleLogin`, `checkPlanLimits` |
+| Variables | `camelCase` | `jwtToken`, `expiresIn` |
 | Constants | `UPPER_SNAKE_CASE` | `MAX_LOGIN_ATTEMPTS` |
 | Error codes | `UPPER_SNAKE_CASE` | `INVALID_CREDENTIALS` |
-| Spec fields | `snake_case` | `- email: string` |
+| Contract fields | `camelCase` | `"name": "clientName"` |
+| DB table names | `snake_case` | `profiles`, `subscriptions` |
+| DB column names | `snake_case` | `user_id`, `created_at` |
+| Env variables | `SCREAMING_SNAKE_CASE` | `NEXT_PUBLIC_SUPABASE_URL` |
 
-### TypeScript (Frontend — Beta)
+### Component Naming (deterministic, no singularization)
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Components | `PascalCase` | `Login`, `InvoiceList` |
-| Hooks | `camelCase` with `use` prefix | `useLogin`, `useInvoiceList` |
-| Schemas | `PascalCase` with `Schema` suffix | `LoginRequestSchema` |
-| Variables | `camelCase` | `jwtToken`, `expiresIn` |
-| Files | See file naming above | `Login.tsx`, `hook.ts` |
+Components follow `{DomainPascal}{SlicePascal}{Suffix}` pattern:
+
+| Slice | Component | Hook |
+|-------|-----------|------|
+| `auth/login` | `AuthLoginForm` | `useAuthLogin` |
+| `invoices/create` | `InvoicesCreateForm` | `useInvoicesCreate` |
+| `dashboard/summary` | `DashboardSummaryView` | `useDashboardSummary` |
+
+No singularization — `invoices` stays `Invoices`, not `Invoice`. Fully deterministic.
 
 ---
 
