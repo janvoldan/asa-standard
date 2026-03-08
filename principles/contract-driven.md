@@ -32,7 +32,7 @@ User logs in with email and password. Returns JWT token.
 - password: string
 
 ## Outputs
-- jwt_token: string
+- token: string
 - expires_in: int
 
 ## Behaviour
@@ -56,6 +56,7 @@ None
 
 - **Purpose** must be one sentence describing the Slice's intent
 - **Inputs/Outputs** use declared types: `string`, `int`, `float`, `boolean`, `datetime`, `date`, `list<T>`, `dict`, `optional<T>`
+- **Field names** in the Spec use `snake_case`. The Contract converts them to `camelCase` for TypeScript.
 - **Behaviour** steps are imperative and ordered — they describe the flow
 - **Errors** use `UPPER_SNAKE_CASE` codes with user-facing messages
 - **Side Effects** declare external writes (DB, email, queues) or `None`

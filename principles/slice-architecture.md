@@ -27,7 +27,7 @@ Every Slice follows a deterministic file structure:
 domains/<domain>/<slice>/
 ├── slice.spec.md         # Human-readable specification
 ├── slice.contract.json   # Machine-readable contract (generated)
-├── handler.ts            # Route handler (Next.js route handler / server action)
+├── handler.ts            # Next.js route handler (HTTP request/response)
 ├── repository.ts         # Data access (Supabase queries)
 ├── schemas.ts            # Zod validation schemas (generated from contract)
 └── ui/
