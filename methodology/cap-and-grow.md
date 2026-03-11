@@ -98,11 +98,8 @@ from shared.legacy_bridge.billing import BillingAdapter
 **Goal:** Build all new features as ASA Slices. Legacy code gradually becomes unused.
 
 ```bash
-asa create-slice billing/calculate_overage
-# Edit the spec
-asa generate-contract billing/calculate_overage
-asa generate-skeleton billing/calculate_overage
-# Implement business logic
+asa slice new billing/calculate_overage
+# Edit the spec, then implement business logic
 asa lint billing/calculate_overage
 ```
 

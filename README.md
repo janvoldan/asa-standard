@@ -121,13 +121,14 @@ ASA was designed in response to five root causes observed in AI-generated and AI
 
 ## Foundation Modules
 
-ASA defines three foundation modules that cover the most common SaaS needs:
+ASA defines four foundation modules that cover the most common SaaS needs:
 
 | Module | Built On | What It Adds |
 |--------|----------|-------------|
-| **auth** | Supabase Auth | Slice structure, middleware, profile sync, route guards, RLS policies, security-reviewed defaults |
 | **db** | Supabase PostgreSQL | Canonical client separation (browser/server/admin), repository boundaries, migration conventions |
+| **auth** | Supabase Auth | Slice structure, middleware, profile sync, route guards, RLS policies, security-reviewed defaults |
 | **payments** | Stripe | Idempotent webhook handler, subscription state machine, plan limits, entitlement checks |
+| **admin** | Role-based access | Dashboard, user management, roles, impersonation, audit log |
 
 Foundation modules are not wrappers — they add **architecture, safe defaults, and enforcement** on top of vendor primitives.
 
@@ -151,15 +152,56 @@ Foundation modules are not wrappers — they add **architecture, safe defaults, 
 
 The ASA CLI automates and enforces the standard:
 
+```bash
+pip install asa-standard
+```
+
+> The CLI command is `asa` (not `asa-standard`). Requires Python 3.10+.
+
+### Diagnostic (Always Free)
+
 | Command | Purpose |
 |---------|--------|
-| `asa init` | Initialize a new ASA project (runnable Next.js starter) |
-| `asa scan` | Diagnose structural risk — AI Chaos Index (ACI) score |
-| `asa install <module>` | Install a foundation module (auth, db, payments) |
-| `asa slice new <name>` | Create a new vertical slice (handler + schemas + UI + contract) |
-| `asa slice update <name>` | Regenerate slice after spec change (preserves user code) |
-| `asa lint` | Enforce boundaries, contracts, security rules |
-| `asa deploy` | Architecture-safe deployment (Vercel + Supabase) |
+| `asa scan [path]` | AI Chaos Index — structural risk score (0–100), 5 root causes, risk band |
+| `asa scan [path] --json` | Machine-readable JSON output for CI pipelines |
+
+### Stabilization Engine
+
+| Command | Purpose |
+|---------|--------|
+| `asa stabilize [--yes] [--dry-run]` | Full stabilization flow: scan → infer → plan → apply → bridge → verify |
+| `asa spec infer [path]` | Infer `.asa/spec.yaml` from existing codebase |
+| `asa plan` | Dry-run — show what `asa apply` would do |
+| `asa apply` | Install foundation architecture from spec |
+| `asa verify [--ci]` | Verify architecture vs `.asa/spec.yaml` (CI-ready) |
+| `asa repair [--auto]` | Detect architecture drift and suggest/apply fixes |
+
+### Foundation
+
+| Command | Purpose |
+|---------|--------|
+| `asa init --name <name>` | Initialize new ASA project (runnable Next.js App Router starter) |
+| `asa install <module>` | Install foundation module (db-basic, auth-basic, payments-basic, admin-basic) |
+| `asa lint [--strict]` | Boundary + contract + security + entitlement enforcement |
+| `asa deploy [--check \| --staging \| --prod]` | Architecture-safe deployment (Vercel + Supabase) |
+
+### Slice Management
+
+| Command | Purpose |
+|---------|--------|
+| `asa slice new <domain/name>` | Create vertical slice (handler + schemas + UI + contract) |
+| `asa slice update <domain/name>` | Regenerate after spec change (preserves user code) |
+| `asa slice plan <spec>` | Propose slice architecture from functional spec |
+| `asa slice split <name>` | Analyze oversized slice, propose split |
+| `asa slice build <name>` | Internal build pipeline (contract → zod → skeleton) |
+| `asa slice sync` | Validate all contracts across project |
+| `asa slice analyze <name>` | Detailed slice analysis (LOC, imports, coupling) |
+
+### UI Generation
+
+| Command | Purpose |
+|---------|--------|
+| `asa ui generate <name>` | Regenerate frontend part of slice from contract |
 
 ASA the standard is open and language-agnostic. The reference CLI implementation targets **Next.js + Supabase + Stripe on Vercel**.
 
@@ -173,4 +215,4 @@ The standard is open. No vendor lock-in. No license fees.
 
 ---
 
-**Version 2.0** — March 2026
+**Version 2.1** — March 2026
