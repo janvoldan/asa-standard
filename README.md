@@ -1,4 +1,4 @@
-# ASA — Atomic Slice Architecture
+# ASA — AI Safe Architecture
 
 **An architecture standard for AI-generated software that stays maintainable.**
 
@@ -22,7 +22,7 @@ The structural cause is not that AI writes bad code. AI optimizes locally withou
 
 ## What ASA Is
 
-ASA (Atomic Slice Architecture) is an architectural standard that defines how to organize, generate, and enforce structure in software systems — particularly those built or maintained with AI assistance.
+ASA (AI Safe Architecture) is an architectural standard that defines how to organize, generate, and enforce structure in software systems — particularly those built or maintained with AI assistance.
 
 ASA is **not a framework**. It is not a library. It is not a runtime dependency.
 
