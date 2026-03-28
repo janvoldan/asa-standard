@@ -1,28 +1,28 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "domain": "auth",
   "slice": "login",
-  "inputs": {
-    "email": "string",
-    "password": "string"
-  },
-  "outputs": {
-    "jwt_token": "string",
-    "expires_in": "int"
-  },
+  "type": "route",
+  "has_ui": true,
+  "has_repository": true,
+  "inputs": [
+    { "name": "email", "type": "string", "required": true },
+    { "name": "password", "type": "string", "required": true }
+  ],
+  "outputs": [
+    { "name": "token", "type": "string", "required": true },
+    { "name": "expiresIn", "type": "int", "required": true }
+  ],
   "behaviour": [
-    "Verify user exists in database AND user.is_active = True.",
-    "Verify password matches stored hash (bcrypt).",
-    "Generate JWT token with 24h expiration.",
-    "Return token (never return password hash)."
+    "Verify user exists in database.",
+    "Verify password matches stored hash.",
+    "Generate session token.",
+    "Return token with expiration time."
   ],
   "errors": [
     { "code": "INVALID_CREDENTIALS", "message": "Invalid email or password." },
-    { "code": "USER_NOT_FOUND", "message": "No user with this email exists." },
-    { "code": "ACCOUNT_LOCKED", "message": "Account has been locked due to too many failed attempts." }
+    { "code": "USER_NOT_FOUND", "message": "No user with this email exists." }
   ],
-  "side_effects": [
-    "Updates last_login timestamp in database."
-  ],
+  "side_effects": [],
   "dependencies": []
 }

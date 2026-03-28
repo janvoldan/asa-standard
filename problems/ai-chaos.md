@@ -110,6 +110,48 @@ No automated enforcement. Code goes from developer to production unchecked. Even
 
 ---
 
+## Safety Failures (L2)
+
+Beyond architecture, AI-generated codebases have a second class of failures: **safety gaps** in billing, auth, and admin. These are not structural problems — they are implementation gaps where the AI generates code for the happy path but skips critical safety checks.
+
+### RC10: Auth Misconfiguration
+
+AI tools implement login flows but skip server-side verification, RLS policies, and secret protection.
+
+**What happens:**
+- service_role key exposed in client bundle (anyone can bypass RLS)
+- RLS not enabled on user tables (any user can read all data)
+- Auth verification is client-side only (trivially bypassable)
+- getSession() used instead of getUser() (session spoofing possible)
+
+**ASA Response:** 8 automated auth safety checks (Phase 1).
+
+### RC11: Billing Logic Exposure
+
+AI tools create Stripe integrations but skip webhook verification, server-side checkout, and idempotency.
+
+**What happens:**
+- Stripe secret key accessible from client code
+- Webhook handler doesn't verify Stripe signatures (fake events accepted)
+- Checkout initiated client-side (price tampering possible)
+- Fulfillment on success_url redirect instead of webhook (race condition)
+
+**ASA Response:** 8 automated billing safety checks (Phase 1).
+
+### RC12: Admin Privilege Escalation
+
+AI tools create admin panels but skip auth gates, use hardcoded credentials, and leave debug routes open.
+
+**What happens:**
+- Admin routes accessible without authentication
+- Hardcoded admin email/password in source code
+- Debug endpoints left in production with no auth
+- No audit log for destructive admin actions
+
+**ASA Response:** 4 automated admin safety checks (Phase 1).
+
+---
+
 ## How These Compound
 
 These root causes do not appear in isolation. They reinforce each other:

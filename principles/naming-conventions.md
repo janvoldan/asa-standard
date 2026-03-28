@@ -6,17 +6,17 @@
 
 ## Architecture Name
 
-The architecture described in this repository is officially called:
+The standard described in this repository is officially called:
 
-**ASA (Atomic Slice Architecture)**
+**ASA (AI Safe Architecture)**
 
 ### Canonical Name
 
-**Atomic Slice Architecture** is the canonical and current name. The abbreviation **ASA** is used as a short-form reference.
+**AI Safe Architecture** is the canonical and current name. The abbreviation **ASA** is used as a short-form reference.
 
 ### Historical Names
 
-Earlier working names used during development:
+Earlier names used during development:
 
 - Agentic-Sliced Architecture
 - AI-Sliced Architecture
@@ -133,7 +133,7 @@ All fields in `slice.spec.md` use `snake_case`:
 - user_id: string
 ```
 
-Field names must be valid Python identifiers. No hyphens, no spaces, no special characters.
+Field names must be valid identifiers. No hyphens, no spaces, no special characters.
 
 ---
 

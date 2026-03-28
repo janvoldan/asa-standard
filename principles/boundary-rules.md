@@ -30,7 +30,7 @@ The structural cause: AI optimizes locally. It finds the shortest path to make c
 ASA enforces boundaries through static analysis of the import graph using Abstract Syntax Tree (AST) parsing.
 
 ```bash
-$ asa lint auth/login
+$ npx @vibecodiq/cli guard check
 
 ❌ [LINT FAIL] Boundary violation in repository.ts:
    Line 3: Illegal import '@/domains/billing/subscribe/handler'
@@ -134,7 +134,7 @@ Boundary rules extend to AI assistants through `.cursorrules`:
 
 ## Required
 - All features must be ASA Slices in /domains
-- Run `asa lint` after every change
+- Run `npx @vibecodiq/cli guard check` after every change
 - Update spec first, then regenerate
 ```
 

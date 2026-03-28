@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 | Outside markers | **Regenerated** from template and contract |
 | Inside markers | **Preserved** exactly as written |
 
-When you run `asa slice update auth/login`:
+When you regenerate a Slice:
 
 1. The generator reads the current Contract
 2. It regenerates all structural code (imports, class definitions, type hints)
@@ -62,9 +62,9 @@ When you run `asa slice update auth/login`:
 
 | Scenario | Action |
 |----------|--------|
-| Spec changed (new inputs/outputs) | `asa slice update` (regenerates contract + skeleton) |
-| Schema needs updating | `asa slice update` (schemas regenerated, handler code preserved) |
-| Template improved | `asa slice update` (structural updates applied) |
+| Spec changed (new inputs/outputs) | Regenerate from spec (regenerates contract + skeleton) |
+| Schema needs updating | Regenerate from spec (schemas regenerated, handler code preserved) |
+| Template improved | Regenerate from spec (structural updates applied) |
 | Bug in your logic | Edit directly inside markers, no regeneration needed |
 
 ---
@@ -128,7 +128,7 @@ ASA uses two marker pairs:
 
 ```typescript
 // --- ASA GENERATED START ---
-// Auto-generated code. Do NOT edit. Overwritten by `asa slice update`.
+// Auto-generated code. Do NOT edit. Overwritten during regeneration.
 // --- ASA GENERATED END ---
 
 // --- USER CODE START ---
@@ -152,10 +152,10 @@ Rules:
 Regeneration is one step in the deterministic pipeline:
 
 ```
-1. Update slice.spec.md           (human edits intent)
-2. asa slice update <domain/name>  (contract + skeleton regenerated, user code preserved)
-3. Update implementation           (adapt to new inputs/outputs)
-4. asa lint                        (verify boundaries and structure)
+1. Update slice.spec.md                         (human edits intent)
+2. Regenerate contract + skeleton from spec      (user code preserved)
+3. Update implementation                         (adapt to new inputs/outputs)
+4. Run boundary linter                           (verify boundaries and structure)
 ```
 
 The pipeline ensures that Spec, Contract, and Code remain in sync. Regeneration is safe because it is predictable and bounded.

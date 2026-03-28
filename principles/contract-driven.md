@@ -70,8 +70,8 @@ The parser depends on this structure. Missing or misordered sections cause expli
 
 The Contract is the machine-readable representation of the Spec. It is:
 
-- **Generated** by `asa slice new` or `asa slice update`
-- **Consumed** by the skeleton generator and `asa lint`
+- **Generated** from the Spec (deterministically)
+- **Consumed** by the skeleton generator and boundary linter
 - **Never edited manually**
 
 ```json
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 // --- USER CODE END ---
 ```
 
-When the Spec changes, you run `asa slice update`. Your code inside markers is preserved. Structure outside markers (imports, schemas) is updated from the new Contract.
+When the Spec changes, you regenerate the skeleton. Your code inside markers is preserved. Structure outside markers (imports, schemas) is updated from the new Contract.
 
 See [Regeneration Safety](regeneration-safety.md) for details.
 
@@ -215,10 +215,9 @@ The contract is the single source of truth. Type mismatches between handler and 
 
 ```
 1. Write or update slice.spec.md
-2. asa slice new <domain>/<slice>               (first time — creates contract + skeleton + UI)
-   asa slice update <domain>/<slice>            (subsequent — regenerates, preserves user code)
+2. Generate contract + skeleton from spec (first time creates, subsequent updates preserve user code)
 3. Implement business logic inside USER CODE markers
-4. asa lint <domain>/<slice>
+4. Run boundary linter to validate structure
 5. Run tests
 ```
 
