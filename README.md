@@ -108,6 +108,7 @@ npx @vibecodiq/cli scan
 | `npx @vibecodiq/cli guard init` | Install safety CI enforcement (GitHub Actions) |
 | `npx @vibecodiq/cli guard init --all` | Install safety + architecture CI enforcement |
 | `npx @vibecodiq/cli guard check` | Run architecture checks locally |
+| `npx @vibecodiq/cli guard upgrade` | Upgrade rules to latest version |
 
 ### Foundation — Install Safe Modules
 
