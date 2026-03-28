@@ -1,6 +1,6 @@
-# Safety Checks — Phase 1
+# Safety Checks
 
-**29 automated checks for AI-built apps across billing, auth, admin, architecture, and foundation.**
+**32 automated checks for AI-built apps across billing, auth, admin, architecture, and foundation.**
 
 Each check documents a specific safety gap commonly found in AI-generated codebases, why it matters, and how to fix it.
 
@@ -16,7 +16,7 @@ Each check documents a specific safety gap commonly found in AI-generated codeba
 | **Architecture** | 5 | 2x P0, 2x P1, 1x P2 | Missing domain boundaries, cross-domain imports, bloated pages |
 | **Foundation** | 4 | 1x P0, 3x P1 | Missing .env.example, committed secrets, no strict mode, no error boundary |
 
-**Total: 29 checks (Phase 1)**
+**Total: 32 checks**
 
 ---
 
@@ -61,7 +61,7 @@ Each check documents a specific safety gap commonly found in AI-generated codeba
 
 ---
 
-## Architecture (5 checks)
+## Architecture (8 checks)
 
 | ID | Name | Priority |
 |----|------|----------|
@@ -70,6 +70,9 @@ Each check documents a specific safety gap commonly found in AI-generated codeba
 | ARCH-03 | No cross-domain imports | P1 |
 | ARCH-04 | Pages are thin wrappers (< 80 LOC) | P1 |
 | ARCH-05 | shared/ has no business logic | P2 |
+| ARCH-06 | File size limit (> 500 LOC) | P1 |
+| STR-01 | CI/CD pipeline exists | P1 |
+| STR-02 | Test files exist | P1 |
 
 ---
 
@@ -106,7 +109,7 @@ Each check has a dedicated page on [asastandard.org/checks](https://asastandard.
 
 ## Tooling
 
-Scan your app against all 29 Phase 1 checks:
+Scan your app against all 32 checks:
 
 ```bash
 npx @vibecodiq/cli scan

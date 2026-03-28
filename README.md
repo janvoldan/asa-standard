@@ -38,9 +38,9 @@ ASA is **not a framework**. It is not a library. It is not a runtime dependency.
 
 ### L2 — Safety (Billing, Auth, Admin)
 
-29 automated checks across the critical foundation layers:
+32 automated checks across the critical foundation layers:
 
-| Module | Phase 1 Checks | What It Catches |
+| Module | Checks | What It Catches |
 |--------|---------------|-----------------|
 | **Billing** | 8 checks | Stripe key exposure, unsigned webhooks, client-side checkout, missing idempotency |
 | **Auth** | 8 checks | service_role exposure, missing RLS, client-side auth, session spoofing |
@@ -95,7 +95,7 @@ npx @vibecodiq/cli scan
 
 | Command | Purpose |
 |---------|---------|
-| `npx @vibecodiq/cli scan` | Safety scan: auth, billing, admin, env, error handling (29 Phase 1 checks) |
+| `npx @vibecodiq/cli scan` | Safety scan: auth, billing, admin, env, error handling (32 checks) |
 | `npx @vibecodiq/cli scan --architecture` | Architecture scan: domain boundaries, thin pages, cross-imports |
 | `npx @vibecodiq/cli scan --all` | Full scan: safety + architecture |
 | `npx @vibecodiq/cli scan --fix` | Safety scan + AI-generated fix prompts for every finding |
@@ -174,7 +174,7 @@ Foundation modules are not wrappers — they add **architecture, safe defaults, 
 
 | Document | Description |
 |----------|-------------|
-| [Safety Checks](checks/) | 29 Phase 1 checks across billing, auth, admin, architecture, foundation |
+| [Safety Checks](checks/) | 32 checks across billing, auth, admin, architecture, foundation |
 | [Slice Architecture](principles/slice-architecture.md) | How Slices work — full-stack vertical features |
 | [Boundary Rules](principles/boundary-rules.md) | Import rules, enforcement, allowed dependencies |
 | [Contract-Driven Pipeline](principles/contract-driven.md) | Spec -> Contract -> Skeleton pipeline |
