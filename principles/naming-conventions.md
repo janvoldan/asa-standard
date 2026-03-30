@@ -21,7 +21,7 @@ Earlier names used during development:
 - Agentic-Sliced Architecture
 - AI-Sliced Architecture
 
-These refer to earlier iterations of the same core concept and are kept for historical context only. All new documentation uses **ASA (Atomic Slice Architecture)**.
+These refer to earlier iterations of the same core concept and are kept for historical context only. All new documentation uses **ASA (AI Safe Architecture)**.
 
 ---
 

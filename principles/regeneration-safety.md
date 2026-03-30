@@ -2,6 +2,8 @@
 
 **How ASA preserves your implementation when structure changes.**
 
+> **ASA specification.** This document describes a recommended architectural pattern. Public tooling for automated marker-based regeneration is not yet available. The pattern can be adopted manually or with AI coding tools.
+
 ---
 
 ## The Problem

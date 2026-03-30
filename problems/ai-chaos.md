@@ -106,7 +106,7 @@ No automated enforcement. Code goes from developer to production unchecked. Even
 - "We shipped a bug that should have been caught automatically"
 - "There's no safety check before deployment"
 
-**ASA response:** The boundary linter (`asa lint`) integrates into CI/CD pipelines. Boundary violations, missing files, and contract mismatches are caught before code reaches production. The system has an immune system.
+**ASA response:** The Vibecodiq Guard (`npx @vibecodiq/cli guard init`) integrates into CI/CD pipelines. Safety checks and architecture rules are enforced on every PR. Regressions are caught before code reaches production.
 
 ---
 

@@ -1,6 +1,6 @@
 # Contributing to ASA Standard
 
-This repository contains the public specification of Atomic Slice Architecture (ASA). Contributions that improve clarity, fix errors, or extend the standard are welcome.
+This repository contains the public specification of AI Safe Architecture (ASA). Contributions that improve clarity, fix errors, or extend the standard are welcome.
 
 ---
 

@@ -110,18 +110,9 @@ npx @vibecodiq/cli scan
 | `npx @vibecodiq/cli guard check` | Run architecture checks locally |
 | `npx @vibecodiq/cli guard upgrade` | Upgrade rules to latest version |
 
-### Foundation — Install Safe Modules
+The standard is open and language-agnostic. The CLI is the reference implementation for scanning and enforcement.
 
-| Command | Purpose |
-|---------|---------|
-| `npx @vibecodiq/cli install auth` | Auth module: login, register, session, middleware, RLS |
-| `npx @vibecodiq/cli install payments` | Payments module: Stripe checkout, webhooks, subscriptions |
-| `npx @vibecodiq/cli install admin` | Admin module: RBAC, audit log, user management |
-| `npx @vibecodiq/cli install foundation` | All three modules + DB utilities |
-
-The standard is open and language-agnostic. The CLI is the reference implementation.
-
--> [Vibecodiq CLI](https://vibecodiq.com)
+-> [Vibecodiq CLI Documentation](https://vibecodiq.com/cli)
 
 ---
 
