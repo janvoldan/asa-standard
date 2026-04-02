@@ -6,12 +6,13 @@ This repository contains the public specification of AI Safe Architecture (ASA).
 
 ## What This Repository Contains
 
-- Architecture principles and rules
-- Migration methodology documentation
-- Problem analysis (failure patterns in AI-generated codebases)
-- Illustrative examples (not runnable code)
+- Three protection layers: Production Foundation, Business Logic Protection, Slice Architecture
+- Core principles: Boundaries, Verification, Isolation, Enforcement
+- Safety check documentation (32 Phase 1 checks)
+- Terminology and adoption guidance
+- Legacy/archived concepts from earlier ASA versions
 
-This is a **specification repository**, not a code repository. Tooling that implements ASA is available commercially via [vibecodiq.com](https://vibecodiq.com).
+This is a **specification repository**, not a code repository. Tooling that implements ASA is available via [vibecodiq.com](https://vibecodiq.com).
 
 ---
 
@@ -36,16 +37,15 @@ This is a **specification repository**, not a code repository. Tooling that impl
 
 ### Tone
 
-- Professional, fact-based, forensic
+- Professional, fact-based
 - No hype, no buzzwords, no evangelism
-- Describe what is observed, not what is believed
-- Use "what we observe is..." not "obviously..."
+- Standard-first, not vendor-first — ASA defines, Vibecodiq delivers
 
 ### Language
 
-- Use established terminology from the specification
+- Use established terminology from [terminology.md](terminology.md)
 - Do not introduce synonyms for defined terms
-- Error descriptions should be diagnostic, not judgmental
+- Use "ASA requires" / "ASA recommends", not "the tool does"
 
 ### Structure
 
